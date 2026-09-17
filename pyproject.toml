@@ -1,0 +1,14 @@
+[project]
+name = "fastapi-blog"
+version = "0.1.0"
+description = "A blog built with FastAPI, SQLAlchemy (async) and Jinja2 templates"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard]>=0.141.1",
+    "sqlalchemy>=2.0.52",
+    "aiosqlite>=0.22.1",
+    "pwdlib[argon2]>=0.3.1",
+    "pyjwt>=2.14.0",
+    "pydantic-settings>=2.15.0",
+]

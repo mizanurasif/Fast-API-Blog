@@ -1,2 +1,5 @@
 snippets.txt
-_pycache_/
+__pycache__/
+.venv/
+.env
+uv.lock
