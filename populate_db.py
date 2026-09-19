@@ -20,7 +20,7 @@ USERS = [
         "image": "corey.png",
     },
     {
-        "username": "test",
+        "username": "DefaultDude",
         "email": "test@gmail.com",
         "password": "testtest",
         # No image - uses default
@@ -243,6 +243,7 @@ async def clear_existing_data() -> None:
 
     # Clear database tables (order respects foreign keys)
     async with AsyncSessionLocal() as db:
+        await db.execute(delete(models.PasswordResetToken))
         await db.execute(delete(models.Post))
         await db.execute(delete(models.User))
         await db.commit()
