@@ -24,12 +24,18 @@ from fastapi.exception_handlers import (
 from routers import posts,users
 from config import settings
 
-
+'''
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     # Startup
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    yield
+    # Shutdown
+    await engine.dispose()'''
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    
     yield
     # Shutdown
     await engine.dispose()

@@ -1,4 +1,5 @@
 import asyncio
+import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -381,4 +382,8 @@ async def populate() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(populate())
+    # psycopg's async mode can't use Windows' default ProactorEventLoop
+    if sys.platform == "win32":
+        asyncio.run(populate(), loop_factory=asyncio.SelectorEventLoop)
+    else:
+        asyncio.run(populate())
