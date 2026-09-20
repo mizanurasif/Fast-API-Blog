@@ -95,7 +95,7 @@ async def update_post_full(
     if post.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not Autorize to update this post",
+            detail="Not Authorized to update this post",
         )
     post.title = post_data.title
     post.content = post_data.content
@@ -123,7 +123,7 @@ async def update_post_partial(
     if post.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not Autorize to update this post",
+            detail="Not Authorized to update this post",
         )
     update_data = post_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
