@@ -4,7 +4,7 @@ from sqlalchemy.orm import DeclarativeBase
 from config import settings
 
 '''
-SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///./blog.db"
+Dat = "sqlite+aiosqlite:///./blog.db"
 engine = create_async_engine(
     SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False},

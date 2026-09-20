@@ -6,6 +6,7 @@ from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
+from config import settings
 
 
 class User(Base):
@@ -31,7 +32,8 @@ class User(Base):
     @property
     def image_path(self) -> str:
         if self.image_file:
-            return f"/media/profile_pics/{self.image_file}"
+            #return f"/media/profile_pics/{self.image_file}"
+            return f"https://{settings.s3_bucket_name}.s3.{settings.s3_region}.amazonaws.com/profile_pics/{self.image_file}"
         return "/static/profile_pics/default.jpg"
 
 
@@ -51,7 +53,7 @@ class Post(Base):
         default=lambda: datetime.now(UTC),
     )
     likes: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
-    
+
     author: Mapped[User] = relationship(back_populates="posts")
 
 class PasswordResetToken(Base):
