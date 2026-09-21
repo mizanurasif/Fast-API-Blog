@@ -1,7 +1,13 @@
 {% extends "layout.html" %}
 {% block content %}
   <article class="content-section py-3 px-4 mb-4">
-    <div class="d-flex align-items-start gap-4">
+    <div class="d-flex align-items-start gap-3">
+      <div class="vote-box d-flex flex-column align-items-center flex-shrink-0"
+           data-post-id="{{ post.id }}">
+        <button type="button" class="vote-btn vote-up" aria-label="Upvote" aria-pressed="false">&#9650;</button>
+        <span class="vote-score fw-bold">{{ post.score }}</span>
+        <button type="button" class="vote-btn vote-down" aria-label="Downvote" aria-pressed="false">&#9660;</button>
+      </div>
       <img class="rounded-circle article-img flex-shrink-0"
            src="{{ post.author.image_path }}"
            alt="{{ post.author.username }}'s profile picture"

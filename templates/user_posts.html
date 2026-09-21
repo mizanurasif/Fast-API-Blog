@@ -4,7 +4,13 @@
   <div id="postsContainer">
     {% for post in posts %}
       <article class="content-section py-3 px-4 mb-4">
-        <div class="d-flex align-items-start gap-4">
+        <div class="d-flex align-items-start gap-3">
+          <div class="vote-box d-flex flex-column align-items-center flex-shrink-0"
+               data-post-id="{{ post.id }}">
+            <button type="button" class="vote-btn vote-up" aria-label="Upvote" aria-pressed="false">&#9650;</button>
+            <span class="vote-score fw-bold">{{ post.score }}</span>
+            <button type="button" class="vote-btn vote-down" aria-label="Downvote" aria-pressed="false">&#9660;</button>
+          </div>
           <img class="rounded-circle article-img flex-shrink-0"
                src="{{ post.author.image_path }}"
                alt="{{ post.author.username }}'s profile picture"
@@ -40,6 +46,7 @@
 {% block scripts %}
   <script type="module">
   import { escapeHtml, formatDate } from '/static/js/utils.js';
+  import { voteMarkup, hydrateMyVotes } from '/static/js/votes.js';
 
   const userId = {{ user.id }};
   let currentOffset = {{ limit }};
@@ -52,8 +59,9 @@
   function createPostHTML(post) {
     return `
       <article class="content-section py-3 px-4 mb-4">
-        <div class="d-flex align-items-start gap-4">
-          <img class="rounded-circle article-img flex-shrink-0" src="${escapeHtml(post.author.image_path)}" alt="${escapeHtml(post.author.username)}'s profile picture" width="64" height="64" loading="lazy">
+        <div class="d-flex align-items-start gap-3">
+          ${voteMarkup(post)}
+          <img class="rounded-circle article-img flex-shrink-0" src="${escapeHtml(post.author.image_path)}"alt="${escapeHtml(post.author.username)}'s profile picture" width="64" height="64" loading="lazy">
           <div class="flex-grow-1">
             <div class="article-metadata mb-2">
               <a class="me-2" href="/users/${post.author.id}/posts">${escapeHtml(post.author.username)}</a>
@@ -84,9 +92,13 @@
 
       const data = await response.json();
 
+      const newBoxes = [];
       for (const post of data.posts) {
         postsContainer.insertAdjacentHTML('beforeend', createPostHTML(post));
+        newBoxes.push(postsContainer.lastElementChild.querySelector('.vote-box'));
       }
+
+      await hydrateMyVotes(newBoxes);
 
       currentOffset += data.posts.length;
       hasMore = data.has_more;

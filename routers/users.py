@@ -17,7 +17,8 @@ from schemas import (
     PaginatedPostsResponse,
     ChangePasswordRequest,
     ForgotPasswordRequest,
-    ResetPasswordRequest)
+    ResetPasswordRequest,
+    UserVoteStats)
 
 from datetime import timedelta,UTC,datetime
 from fastapi.security import OAuth2PasswordRequestForm
@@ -232,6 +233,31 @@ async def change_password(
     await db.commit()
     return {"message": "Password changed successfully"}
 
+@router.get("/me/votes")
+async def get_my_votes(
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    post_ids: Annotated[list[int], Query()] = [],
+) -> dict[int, int]:
+    """Which of these posts the current user has voted on: {post_id: +1|-1}."""
+    if not post_ids:
+        return {}
+
+    # An uncapped IN (...) is a free DoS.
+    if len(post_ids) > 100:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Too many post_ids (maximum 100)",
+        )
+
+    result = await db.execute(
+        select(models.Vote.post_id, models.Vote.value).where(
+            models.Vote.user_id == current_user.id,
+            models.Vote.post_id.in_(post_ids),
+        ),
+    )
+    return {post_id: value for post_id, value in result.all()}
+
 @router.get("/{user_id}", response_model=UserPublic)
 async def get_user(user_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(select(models.User).where(models.User.id == user_id))
@@ -364,6 +390,49 @@ async def get_user_posts(
         has_more=has_more,
     )
 
+@router.get("/{user_id}/vote-stats", response_model=UserVoteStats)
+async def get_user_vote_stats(
+    user_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    result = await db.execute(select(models.User).where(models.User.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    # Votes received: cast by anyone, on posts this user wrote.
+    received_result = await db.execute(
+        select(
+            func.count().filter(models.Vote.value == 1).label("up"),
+            func.count().filter(models.Vote.value == -1).label("down"),
+        )
+        .select_from(models.Vote)
+        .join(models.Post, models.Vote.post_id == models.Post.id)
+        .where(models.Post.user_id == user_id),
+    )
+    upvotes_received, downvotes_received = received_result.one()
+
+    # Votes given: cast by this user, on anyone's posts.
+    given_result = await db.execute(
+        select(
+            func.count().filter(models.Vote.value == 1).label("up"),
+            func.count().filter(models.Vote.value == -1).label("down"),
+        )
+        .select_from(models.Vote)
+        .where(models.Vote.user_id == user_id),
+    )
+    upvotes_given, downvotes_given = given_result.one()
+
+    return UserVoteStats(
+        upvotes_received=upvotes_received,
+        downvotes_received=downvotes_received,
+        reputation=upvotes_received - downvotes_received,
+        upvotes_given=upvotes_given,
+        downvotes_given=downvotes_given,
+    )
 
 @router.patch("/{user_id}/picture", response_model=UserPrivate)
 async def upload_profile_picture(
@@ -416,8 +485,6 @@ async def upload_profile_picture(
         await delete_profile_image(old_filename)
 
     return current_user
-
-
 
 ## Delete Profile Picture Endpoint
 @router.delete("/{user_id}/picture", response_model=UserPrivate)

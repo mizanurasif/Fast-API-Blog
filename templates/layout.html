@@ -348,7 +348,15 @@
       }
     });
   </script>
+  <!-- Voting -->
+  <script type="module">
+    import { initVoting, hydrateMyVotes } from '/static/js/votes.js';
 
+    // Delegated on document, so it covers home, user feed, single post, and
+    // any posts appended later.
+    initVoting();
+    hydrateMyVotes();
+  </script>
   {% block scripts %}
   {% endblock scripts %}
 

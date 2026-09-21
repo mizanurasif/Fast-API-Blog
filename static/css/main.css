@@ -17,6 +17,9 @@
   --color-border: #dddddd;
   --color-border-light: #e3e3e3;
 
+  --color-vote-up: #c47513;
+  --color-vote-down: #527c9f;
+  --color-vote-idle: #9aa5ad;
   /* Spacing */
   --spacing-xl: 5rem;
 
@@ -140,6 +143,53 @@ a.article-title:focus {
   height: 1.563rem;
   vertical-align: middle;
 }
+/* Voting */
+.vote-box {
+  min-width: 2.5rem;
+  gap: 0.125rem;
+  user-select: none;
+}
+
+.vote-btn {
+  padding: 0 0.25rem;
+  border: none;
+  background: none;
+  line-height: 1;
+  font-size: 1.5rem;
+  color: var(--color-vote-idle);
+  transition: color 0.15s ease-in-out;
+}
+
+.vote-btn:hover:not(:disabled) {
+  color: var(--color-text-heading);
+}
+
+.vote-btn:disabled {
+  opacity: 0.5;
+}
+
+.vote-btn.voted-up {
+  color: var(--color-vote-up);
+}
+
+.vote-btn.voted-down {
+  color: var(--color-vote-down);
+}
+
+.vote-score {
+  font-size: 1.125rem;
+  color: var(--color-text-heading);
+}
+
+@media (max-width: 768px) {
+  .vote-box {
+    min-width: 2rem;
+  }
+
+  .vote-btn {
+    font-size: 1.25rem;
+  }
+}
 
 /* Account/Profile */
 .account-img {
@@ -246,6 +296,9 @@ a.article-title:focus {
   --bs-btn-active-color: #000;
   --bs-btn-active-bg: #e0a8a8;
   --bs-btn-active-border-color: #e8bcbc;
+  --color-vote-up: #e8a33d;
+  --color-vote-down: #8aadc8;
+  --color-vote-idle: #7a848c;
 }
 
 /* Responsive Adjustments */

@@ -1,10 +1,11 @@
 import asyncio
+import random
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import httpx
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, func, select, update
 
 import models
 from config import settings
@@ -228,6 +229,18 @@ POSTS = [
     },
 ]
 
+# Voting configuration.
+# Fixed seed so every run produces the same scores - keeps the seeded data
+# reproducible across runs.
+VOTE_SEED = 44
+# Share of votes that are upvotes. Real vote distributions skew positive.
+UPVOTE_BIAS = 0.72
+# How many of the eligible users vote on a given post. An author cannot vote on
+# their own post, so with 6 users the ceiling is 5.
+MIN_VOTERS_PER_POST = 1
+MAX_VOTERS_PER_POST = 5
+
+
 # The 44th post - always the oldest (easter egg for pagination tutorial)
 POST_44 = {
     "title": "Fun Fact: My High School Football Number Was #44",
@@ -254,6 +267,9 @@ async def clear_existing_data() -> None:
     # Clear database tables (order respects foreign keys)
     async with AsyncSessionLocal() as db:
         await db.execute(delete(models.PasswordResetToken))
+        # Votes would also go via ON DELETE CASCADE, but deleting them
+        # explicitly keeps this independent of the schema's FK options.
+        await db.execute(delete(models.Vote))
         await db.execute(delete(models.Post))
         await db.execute(delete(models.User))
         await db.commit()
@@ -290,6 +306,75 @@ async def update_post_dates() -> None:
 
         await db.commit()
     print("Updated post dates")
+
+
+async def create_votes(client: httpx.AsyncClient, users: list[dict]) -> int:
+    """Vote on every post through the API, skipping each post's own author."""
+    rng = random.Random(VOTE_SEED)
+
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(
+            select(models.Post.id, models.Post.user_id).order_by(models.Post.id),
+        )
+        posts = result.all()
+
+    total = 0
+    for post_id, author_id in posts:
+        # The API returns 403 for self-votes, so leave the author out.
+        eligible = [user for user in users if user["id"] != author_id]
+        rng.shuffle(eligible)
+
+        voter_count = rng.randint(
+            MIN_VOTERS_PER_POST,
+            min(MAX_VOTERS_PER_POST, len(eligible)),
+        )
+
+        for voter in eligible[:voter_count]:
+            value = 1 if rng.random() < UPVOTE_BIAS else -1
+            response = await client.post(
+                f"/api/posts/{post_id}/vote",
+                json={"value": value},
+                headers={"Authorization": f"Bearer {voter['token']}"},
+            )
+            response.raise_for_status()
+            total += 1
+
+    return total
+
+
+async def print_vote_summary(users: list[dict]) -> None:
+    def counts(*where):
+        return (
+            select(
+                func.count().filter(models.Vote.value == 1),
+                func.count().filter(models.Vote.value == -1),
+            )
+            .select_from(models.Vote)
+            .where(*where)
+        )
+
+    async with AsyncSessionLocal() as db:
+        header = f"  {'user':<16}{'received':>14}{'given':>14}{'reputation':>12}"
+        print("\n" + header)
+
+        for user in users:
+            received = await db.execute(
+                counts(models.Post.user_id == user["id"]).join(
+                    models.Post,
+                    models.Vote.post_id == models.Post.id,
+                ),
+            )
+            up_received, down_received = received.one()
+
+            given = await db.execute(counts(models.Vote.user_id == user["id"]))
+            up_given, down_given = given.one()
+
+            recv = f"+{up_received} / -{down_received}"
+            gave = f"+{up_given} / -{down_given}"
+            print(
+                f"  {user['username']:<16}{recv:>14}{gave:>14}"
+                f"{up_received - down_received:>12}",
+            )
 
 
 async def populate() -> None:
@@ -382,11 +467,18 @@ async def populate() -> None:
         print("\nUpdating post dates...")
         await update_post_dates()
 
+        print("\nCreating votes...")
+        vote_count = await create_votes(client, users)
+        print(f"  Created {vote_count} votes")
+
+        await print_vote_summary(users)
+
     await engine.dispose()
 
     print("\nDone!")
     print(f"  {len(USERS)} users")
     print(f"  {len(POSTS) + 1} posts")
+    print(f"  {vote_count} votes")
     print("  Profile pictures uploaded to S3")
 
 
