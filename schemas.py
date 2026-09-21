@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field,EmailStr
 from datetime import datetime
+from typing import Literal
 
 class UserBase(BaseModel):
     username: str = Field(min_length=1,max_length=50)
@@ -52,6 +53,9 @@ class PostResponse(PostBase):
     date_posted: datetime
     author: UserPublic
 
+    score: int = 0
+    my_vote: int | None = None         # +1 / -1 / None — filled per request
+
 class PaginatedPostsResponse(BaseModel):
     posts: list[PostResponse]
     total: int
@@ -72,3 +76,17 @@ class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str = Field(min_length=8)
 
+class VoteRequest(BaseModel):
+    value: Literal[1, -1]     
+
+class VoteResponse(BaseModel):
+    post_id: int
+    score: int
+    my_vote: int | None =  Field(default= None)
+
+class UserVoteStats(BaseModel):
+    upvotes_received: int
+    downvotes_received: int
+    reputation: int
+    upvotes_given: int
+    downvotes_given: int

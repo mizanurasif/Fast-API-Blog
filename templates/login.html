@@ -55,9 +55,13 @@
           document.getElementById('successMessage').textContent =
             'Login successful!';
           showModal('successModal');
-
           document.getElementById('successModal').addEventListener('hidden.bs.modal', () => {
-            window.location.href = '/';
+            const params = new URLSearchParams(window.location.search);
+            const next = params.get('next');
+            // Same-site relative paths only. Without the '//' check, ?next=//evil.com
+            // turns this into an open redirect: browsers treat it as absolute.
+            window.location.href =
+              next && next.startsWith('/') && !next.startsWith('//') ? next : '/';
           }, { once: true });
         } else {
           const error = await response.json();

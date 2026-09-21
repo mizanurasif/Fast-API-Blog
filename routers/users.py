@@ -17,7 +17,8 @@ from schemas import (
     PaginatedPostsResponse,
     ChangePasswordRequest,
     ForgotPasswordRequest,
-    ResetPasswordRequest)
+    ResetPasswordRequest,
+    UserVoteStats)
 
 from datetime import timedelta,UTC,datetime
 from fastapi.security import OAuth2PasswordRequestForm
@@ -28,9 +29,11 @@ from config import settings
 from PIL import UnidentifiedImageError
 
 from starlette.concurrency import run_in_threadpool
-from image_utils import delete_profile_image,process_profile_image
+from image_utils import delete_profile_image,process_profile_image, upload_profile_image
 from sqlalchemy import delete as sql_delete
 from email_utils import send_password_reset_email
+
+from botocore.exceptions import ClientError
 
 router = APIRouter()
 
@@ -172,7 +175,8 @@ async def reset_password(
             detail="Invalid or expired reset token",
         )
 
-    if reset_token.expires_at.replace(tzinfo=UTC) < datetime.now(UTC):
+    #if reset_token.expires_at.replace(tzinfo=UTC) < datetime.now(UTC):
+    if reset_token.expires_at < datetime.now(UTC):
         await db.delete(reset_token)
         await db.commit()
         raise HTTPException(
@@ -228,6 +232,31 @@ async def change_password(
 
     await db.commit()
     return {"message": "Password changed successfully"}
+
+@router.get("/me/votes")
+async def get_my_votes(
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    post_ids: Annotated[list[int], Query()] = [],
+) -> dict[int, int]:
+    """Which of these posts the current user has voted on: {post_id: +1|-1}."""
+    if not post_ids:
+        return {}
+
+    # An uncapped IN (...) is a free DoS.
+    if len(post_ids) > 100:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Too many post_ids (maximum 100)",
+        )
+
+    result = await db.execute(
+        select(models.Vote.post_id, models.Vote.value).where(
+            models.Vote.user_id == current_user.id,
+            models.Vote.post_id.in_(post_ids),
+        ),
+    )
+    return {post_id: value for post_id, value in result.all()}
 
 @router.get("/{user_id}", response_model=UserPublic)
 async def get_user(user_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
@@ -315,7 +344,8 @@ async def delete_user(user_id: int, current_user: CurrentUser, db: Annotated[Asy
     await db.commit()
 
     if old_filename:
-        delete_profile_image(old_filename)
+        #delete_profile_image(old_filename)
+        await delete_profile_image(old_filename)
 
 
 @router.get("/{user_id}/posts", response_model=PaginatedPostsResponse)
@@ -360,6 +390,49 @@ async def get_user_posts(
         has_more=has_more,
     )
 
+@router.get("/{user_id}/vote-stats", response_model=UserVoteStats)
+async def get_user_vote_stats(
+    user_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    result = await db.execute(select(models.User).where(models.User.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    # Votes received: cast by anyone, on posts this user wrote.
+    received_result = await db.execute(
+        select(
+            func.count().filter(models.Vote.value == 1).label("up"),
+            func.count().filter(models.Vote.value == -1).label("down"),
+        )
+        .select_from(models.Vote)
+        .join(models.Post, models.Vote.post_id == models.Post.id)
+        .where(models.Post.user_id == user_id),
+    )
+    upvotes_received, downvotes_received = received_result.one()
+
+    # Votes given: cast by this user, on anyone's posts.
+    given_result = await db.execute(
+        select(
+            func.count().filter(models.Vote.value == 1).label("up"),
+            func.count().filter(models.Vote.value == -1).label("down"),
+        )
+        .select_from(models.Vote)
+        .where(models.Vote.user_id == user_id),
+    )
+    upvotes_given, downvotes_given = given_result.one()
+
+    return UserVoteStats(
+        upvotes_received=upvotes_received,
+        downvotes_received=downvotes_received,
+        reputation=upvotes_received - downvotes_received,
+        upvotes_given=upvotes_given,
+        downvotes_given=downvotes_given,
+    )
 
 @router.patch("/{user_id}/picture", response_model=UserPrivate)
 async def upload_profile_picture(
@@ -383,12 +456,23 @@ async def upload_profile_picture(
         )
 
     try:
-        new_filename = await run_in_threadpool(process_profile_image, content)
+        #new_filename = await run_in_threadpool(process_profile_image, content)
+        processed_bytes, new_filename = await run_in_threadpool(process_profile_image, content)
     except UnidentifiedImageError as err:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid image file. Please upload a valid image (JPEG, PNG, GIF, WebP).",
         ) from err
+    
+    # Upload to S3 (also runs in threadpool via async wrapper)
+    try:
+        await upload_profile_image(processed_bytes, new_filename)
+    except ClientError as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to upload image. Please try again.",
+        ) from err
+    
 
     old_filename = current_user.image_file
 
@@ -397,11 +481,10 @@ async def upload_profile_picture(
     await db.refresh(current_user)
 
     if old_filename:
-        delete_profile_image(old_filename)
+        #delete_profile_image(old_filename)
+        await delete_profile_image(old_filename)
 
     return current_user
-
-
 
 ## Delete Profile Picture Endpoint
 @router.delete("/{user_id}/picture", response_model=UserPrivate)
@@ -428,6 +511,6 @@ async def delete_user_picture(
     await db.commit()
     await db.refresh(current_user)
 
-    delete_profile_image(old_filename)
+    await delete_profile_image(old_filename)
 
     return current_user

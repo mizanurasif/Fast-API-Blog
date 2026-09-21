@@ -7,11 +7,18 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
     )
+    database_url: str
+    
 
     secret_key: SecretStr
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     
+    s3_bucket_name: str
+    s3_region: str = "eu-north-1"
+    s3_access_key_id: SecretStr | None = None
+    s3_secret_access_key: SecretStr | None = None
+    s3_endpoint_url: str | None = None
 
     max_upload_size_bytes: int = 5 * 1024 * 1024
     posts_per_page: int = 10

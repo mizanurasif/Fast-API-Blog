@@ -3,7 +3,13 @@
     <div id="postsContainer">
         {% for post in posts %}
             <article class="content-section py-3 px-4 mb-4">
-                <div class="d-flex align-items-start gap-4">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="vote-box d-flex flex-column align-items-center flex-shrink-0"
+                         data-post-id="{{ post.id }}">
+                        <button type="button" class="vote-btn vote-up" aria-label="Upvote" aria-pressed="false">&#9650;</button>
+                        <span class="vote-score fw-bold">{{ post.score }}</span>
+                        <button type="button" class="vote-btn vote-down" aria-label="Downvote" aria-pressed="false">&#9660;</button>
+                    </div>
                     <img class="rounded-circle article-img flex-shrink-0"
                          src="{{ post.author.image_path }}"
                          alt="{{ post.author.username }}'s profile picture"
@@ -33,8 +39,9 @@
     {% endif %}
 {% endblock content %}
 {% block scripts %}
-    <script type="module">
+  <script type="module">
   import { escapeHtml, formatDate } from '/static/js/utils.js';
+  import { voteMarkup, hydrateMyVotes } from '/static/js/votes.js';
 
   // Pagination state - initialized from server-rendered values
   let currentOffset = {{ limit }};  // Start after server-rendered posts
@@ -48,7 +55,8 @@
   function createPostHTML(post) {
     return `
       <article class="content-section py-3 px-4 mb-4">
-        <div class="d-flex align-items-start gap-4">
+        <div class="d-flex align-items-start gap-3">
+          ${voteMarkup(post)}
           <img class="rounded-circle article-img flex-shrink-0" src="${escapeHtml(post.author.image_path)}" alt="${escapeHtml(post.author.username)}'s profile picture" width="64" height="64" loading="lazy">
           <div class="flex-grow-1">
             <div class="article-metadata mb-2">
@@ -82,10 +90,15 @@
 
       const data = await response.json();
 
-      // Append new posts to the container
+      // Append new posts to the container, collecting their vote widgets
+      const newBoxes = [];
       for (const post of data.posts) {
         postsContainer.insertAdjacentHTML('beforeend', createPostHTML(post));
+        newBoxes.push(postsContainer.lastElementChild.querySelector('.vote-box'));
       }
+
+      // Highlight only the newly added ones (the rest are already done)
+      await hydrateMyVotes(newBoxes);
 
       // Update pagination state
       currentOffset += data.posts.length;
