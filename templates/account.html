@@ -1,149 +1,164 @@
 {% extends "layout.html" %}
 {% block content %}
-    <div class="content-section py-3 px-4 mb-4">
-        <h2 class="mb-4">Account Settings</h2>
-        <!-- Profile Info Section -->
-        <div class="d-flex align-items-center mb-4">
+    <div class="mb-4">
+        <h1 class="page-heading">Account</h1>
+        <p class="page-subheading">Manage your profile, picture and password.</p>
+    </div>
+
+    <!-- Profile Info Section -->
+    <div class="content-section p-4 mb-4">
+        <div class="profile-banner">
             <img id="profileImage"
-                 class="rounded-circle me-3"
-                 src="/static/profile_pics/default.jpg"
+                 class="rounded-circle profile-avatar"
+                 src="/static/profile_pics/default.png"
                  alt="Profile picture"
                  width="100"
                  height="100">
             <div>
-                <h5 id="displayUsername" class="mb-0"></h5>
+                <h5 id="displayUsername" class="mb-1"></h5>
                 <p id="displayEmail" class="text-body-secondary mb-0"></p>
             </div>
         </div>
-        <hr>
-        <!-- Voting Activity Section -->
-        <div class="mb-4">
-            <h5>Voting Activity</h5>
-            <div class="row text-center g-3">
-                <div class="col-4">
-                    <div class="fs-3 fw-bold" id="statReputation">&mdash;</div>
-                    <small class="text-body-secondary">Reputation</small>
-                </div>
-                <div class="col-4">
-                    <div class="fs-3 fw-bold" id="statUpReceived">&mdash;</div>
-                    <small class="text-body-secondary">Upvotes received</small>
-                </div>
-                <div class="col-4">
-                    <div class="fs-3 fw-bold" id="statDownReceived">&mdash;</div>
-                    <small class="text-body-secondary">Downvotes received</small>
-                </div>
-            </div>
-            <hr class="my-3">
-            <p class="text-body-secondary mb-2">Votes you have cast</p>
-            <div class="row text-center g-3">
-                <div class="col-6">
-                    <div class="fs-4 fw-bold" id="statUpGiven">&mdash;</div>
-                    <small class="text-body-secondary">Upvotes given</small>
-                </div>
-                <div class="col-6">
-                    <div class="fs-4 fw-bold" id="statDownGiven">&mdash;</div>
-                    <small class="text-body-secondary">Downvotes given</small>
-                </div>
-            </div>
-        </div>
-        <!-- Update Profile Form -->
-        <div class="mb-4">
-            <h5>Update Profile</h5>
-            <form id="updateProfileForm">
-                <div class="mb-3">
-                    <label for="username" class="form-label">Username</label>
-                    <input type="text"
-                           class="form-control"
-                           id="username"
-                           name="username"
-                           required
-                           minlength="1"
-                           maxlength="50">
-                </div>
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="email" name="email" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Update Profile</button>
-            </form>
-        </div>
-        <hr>
-       <!-- Profile Picture Section -->
-    <div class="mb-4">
-      <h5>Profile Picture</h5>
-      <!-- Preview container -->
-      <div class="mb-3">
-        <img id="imagePreview"
-             class="rounded-circle d-none object-fit-cover"
-             alt="Image preview"
-             width="150"
-             height="150">
-      </div>
-      <!-- File input and upload button -->
-      <div class="d-flex gap-2 align-items-start">
-        <input type="file"
-               class="form-control file-input-sm"
-               id="pictureInput"
-               accept="image/*">
-        <button type="button" class="btn btn-primary" id="uploadPictureBtn" disabled>Upload</button>
-      </div>
-      <small class="text-body-secondary">Maximum file size: 5MB. Supported formats: JPEG, PNG, GIF, WebP.</small>
     </div>
-        <hr>
-        <!-- Password Reset Section (Placeholder) -->
-        <!-- Change Password Section -->
-        <div class="mb-4">
-          <h5>Change Password</h5>
-          <form id="changePasswordForm">
+
+    <!-- Voting Activity Section -->
+    <div class="content-section p-4 mb-4">
+        <h2 class="section-title">Voting Activity</h2>
+        <div class="row text-center g-2 g-sm-3">
+            <div class="col-4">
+                <div class="stat-tile">
+                    <div class="stat-value" id="statReputation">&mdash;</div>
+                    <div class="stat-label">Reputation</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="stat-tile">
+                    <div class="stat-value is-up" id="statUpReceived">&mdash;</div>
+                    <div class="stat-label">Upvotes in</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="stat-tile">
+                    <div class="stat-value is-down" id="statDownReceived">&mdash;</div>
+                    <div class="stat-label">Downvotes in</div>
+                </div>
+            </div>
+        </div>
+        <p class="stat-label mt-4 mb-2">Votes you have cast</p>
+        <div class="row text-center g-2 g-sm-3">
+            <div class="col-6">
+                <div class="stat-tile">
+                    <div class="stat-value is-up" id="statUpGiven">&mdash;</div>
+                    <div class="stat-label">Upvotes given</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="stat-tile">
+                    <div class="stat-value is-down" id="statDownGiven">&mdash;</div>
+                    <div class="stat-label">Downvotes given</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Profile Form -->
+    <div class="content-section p-4 mb-4">
+        <h2 class="section-title">Update Profile</h2>
+        <form id="updateProfileForm">
             <div class="mb-3">
-              <label for="currentPassword" class="form-label">Current Password</label>
-              <input type="password"
-                    class="form-control"
-                    id="currentPassword"
-                    name="current_password"
-                    required>
+                <label for="username" class="form-label">Username</label>
+                <input type="text"
+                       class="form-control"
+                       id="username"
+                       name="username"
+                       required
+                       minlength="1"
+                       maxlength="50">
             </div>
             <div class="mb-3">
-              <label for="newPassword" class="form-label">New Password</label>
-              <input type="password"
-                    class="form-control"
-                    id="newPassword"
-                    name="new_password"
-                    required
-                    minlength="8">
-              <div class="form-text">Password must be at least 8 characters.</div>
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Profile</button>
+        </form>
+    </div>
+
+    <!-- Profile Picture Section -->
+    <div class="content-section p-4 mb-4">
+        <h2 class="section-title">Profile Picture</h2>
+        <!-- Preview container -->
+        <div class="mb-3">
+            <img id="imagePreview"
+                 class="rounded-circle d-none object-fit-cover"
+                 alt="Image preview"
+                 width="150"
+                 height="150">
+        </div>
+        <!-- File input and upload button -->
+        <div class="d-flex flex-wrap gap-2 align-items-start">
+            <input type="file"
+                   class="form-control file-input-sm"
+                   id="pictureInput"
+                   accept="image/*">
+            <button type="button" class="btn btn-primary" id="uploadPictureBtn" disabled>Upload</button>
+        </div>
+        <small class="form-text d-block mt-2">Maximum file size: 5MB. Supported formats: JPEG, PNG, GIF, WebP.</small>
+    </div>
+
+    <!-- Change Password Section -->
+    <div class="content-section p-4 mb-4">
+        <h2 class="section-title">Change Password</h2>
+        <form id="changePasswordForm">
+            <div class="mb-3">
+                <label for="currentPassword" class="form-label">Current Password</label>
+                <input type="password"
+                       class="form-control"
+                       id="currentPassword"
+                       name="current_password"
+                       required>
             </div>
             <div class="mb-3">
-              <label for="confirmNewPassword" class="form-label">Confirm New Password</label>
-              <input type="password"
-                    class="form-control"
-                    id="confirmNewPassword"
-                    name="confirm_new_password"
-                    required
-                    minlength="8">
+                <label for="newPassword" class="form-label">New Password</label>
+                <input type="password"
+                       class="form-control"
+                       id="newPassword"
+                       name="new_password"
+                       required
+                       minlength="8">
+                <div class="form-text">Password must be at least 8 characters.</div>
+            </div>
+            <div class="mb-3">
+                <label for="confirmNewPassword" class="form-label">Confirm New Password</label>
+                <input type="password"
+                       class="form-control"
+                       id="confirmNewPassword"
+                       name="confirm_new_password"
+                       required
+                       minlength="8">
             </div>
             <button type="submit" class="btn btn-primary" id="changePasswordBtn">Change Password</button>
-          </form>
-        </div>
-
-        <hr>
-        <!-- Logout Button -->
-        <div class="mb-4">
-            <button type="button" class="btn btn-light" id="logoutBtn">Logout</button>
-        </div>
-        <hr>
-        <!-- Danger Zone -->
-        <div class="mb-4">
-            <h5 class="text-danger">Danger Zone</h5>
-            <p class="text-body-secondary">
-                Once you delete your account, there is no going back. All your posts will also be deleted.
-            </p>
-            <button type="button"
-                    class="btn btn-outline-danger"
-                    data-bs-toggle="modal"
-                    data-bs-target="#deleteAccountModal">Delete Account</button>
-        </div>
+        </form>
     </div>
+
+    <!-- Session -->
+    <div class="content-section p-4 mb-4">
+        <h2 class="section-title">Session</h2>
+        <p class="text-body-secondary mb-3">Sign out of this browser.</p>
+        <button type="button" class="btn btn-outline-secondary" id="logoutBtn">Logout</button>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="content-section p-4 mb-4">
+        <h2 class="section-title text-danger">Danger Zone</h2>
+        <p class="text-body-secondary mb-3">
+            Once you delete your account, there is no going back. All your posts will also be deleted.
+        </p>
+        <button type="button"
+                class="btn btn-outline-danger"
+                data-bs-toggle="modal"
+                data-bs-target="#deleteAccountModal">Delete Account</button>
+    </div>
+
     <!-- Delete Account Confirmation Modal -->
     <div class="modal fade"
          id="deleteAccountModal"

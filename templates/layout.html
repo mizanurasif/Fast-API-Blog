@@ -71,9 +71,14 @@
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarToggle">
-          <div class="navbar-nav me-auto">
-            <a class="nav-link active" aria-current="page" href="{{ url_for('home') }}">Home</a>
-          </div>
+              <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                   <a class="nav-link active" aria-current="page" href="{{ url_for('home') }}">Home</a>
+                </li>
+                <li class="nav-item ms-2">
+                  <a class="nav-link active" aria-current="page" href="{{ url_for('top-posts') }}">Top Posts</a>
+                </li>
+              </ul>
           <!-- Navbar Right Side -->
           <div class="navbar-nav">
             <!-- Shown when logged in (hidden by default, shown via JS) -->
@@ -124,24 +129,37 @@
         {% endblock content %}
       </div>
       <aside class="col-md-4">
-        <div class="content-section py-3 px-4 mb-4">
-          <h3>Our Sidebar</h3>
-          <p class="text-body-secondary">You can put any information here you'd like.</p>
-          <ul class="list-group">
-            <li class="list-group-item">Latest Posts</li>
-            <li class="list-group-item">Announcements</li>
-            <li class="list-group-item">Calendars</li>
-            <li class="list-group-item">etc</li>
-          </ul>
+        <div class="sidebar-sticky">
+          <div class="content-section p-4 mb-4">
+            <h2 class="section-title">About</h2>
+            <p class="text-body-secondary mb-0">
+              A small blog built with FastAPI, SQLAlchemy and a sprinkling of
+              vanilla JavaScript. Vote on the posts you like.
+            </p>
+          </div>
+          <div class="content-section p-4 mb-4">
+            <h2 class="section-title">Explore</h2>
+            <nav class="d-grid gap-1">
+              <a class="sidebar-link" href="{{ url_for('home') }}">
+                <span class="sidebar-dot"></span> Latest Posts
+              </a>
+              <a class="sidebar-link" href="{{ url_for('account_page') }}">
+                <span class="sidebar-dot"></span> Your Account
+              </a>
+              <a class="sidebar-link" href="/docs">
+                <span class="sidebar-dot"></span> API Docs
+              </a>
+            </nav>
+          </div>
         </div>
       </aside>
     </div>
   </main>
 
-  <footer class="mt-auto py-3 bg-body-tertiary border-top">
+  <footer class="mt-auto py-4">
     <div class="container text-center">
-      <p class="text-body-secondary mb-0">
-        © <span id="year"></span> Corey Schafer
+      <p class="text-body-secondary mb-0 small">
+        © <span id="year"></span> Mizanur Rahman &middot; Built with FastAPI
       </p>
     </div>
   </footer>

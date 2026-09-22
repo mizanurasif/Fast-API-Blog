@@ -1,6 +1,9 @@
 {% extends "layout.html" %}
 {% block content %}
-  <h1 class="mb-4">Posts by {{ user.username }}</h1>
+  <div class="mb-4">
+    <h1 class="page-heading">Posts by {{ user.username }}</h1>
+    <p class="page-subheading">Everything {{ user.username }} has written.</p>
+  </div>
   <div id="postsContainer">
     {% for post in posts %}
       <article class="content-section py-3 px-4 mb-4">
@@ -32,13 +35,15 @@
         </div>
       </article>
     {% else %}
-      <p class="text-body-secondary">No posts by this user yet.</p>
+      <div class="content-section p-5 text-center">
+        <p class="text-body-secondary mb-0">No posts by this user yet.</p>
+      </div>
     {% endfor %}
   </div>
 
   {% if has_more %}
-    <div class="text-center mb-4">
-      <button type="button" class="btn btn-outline-primary" id="loadMoreBtn">Load More Posts</button>
+    <div class="text-center mb-4 pt-2">
+      <button type="button" class="btn btn-outline-primary px-4" id="loadMoreBtn">Load More Posts</button>
     </div>
   {% endif %}
 {% endblock content %}

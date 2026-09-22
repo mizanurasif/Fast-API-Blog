@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
-  <article class="content-section py-3 px-4 mb-4">
+  <article class="content-section p-4 p-md-5 mb-4">
     <div class="d-flex align-items-start gap-3">
       <div class="vote-box d-flex flex-column align-items-center flex-shrink-0"
            data-post-id="{{ post.id }}">
@@ -14,24 +14,23 @@
            width="64"
            height="64"
            loading="lazy">
-      <div class="flex-grow-1">
-        <div class="article-metadata mb-2">
-          <a class="me-2" href="{{ url_for("user_posts", user_id=post.author.id) }}">{{ post.author.username }}</a>
+      <div class="flex-grow-1 min-w-0">
+        <h1 class="article-title mb-3">{{ post.title }}</h1>
+        <div class="article-metadata mb-3">
+          <a class="me-1" href="{{ url_for("user_posts", user_id=post.author.id) }}">{{ post.author.username }}</a>
           <small class="text-body-secondary">{{ post.date_posted.strftime('%B %d, %Y') }}</small>
         </div>
-        <h2 class="article-title">{{ post.title }}</h2>
         <p class="article-content">{{ post.content }}</p>
-        <!-- Only show edit/delete options if user_id is 1 (TEMPORARY - until authentication) -->
 
-        <div id="postActions" class="post-actions mt-3 pt-3 border-top d-none">
-        <button type="button"
-                class="btn btn-outline-secondary me-1"
-                data-bs-toggle="modal"
-                data-bs-target="#editModal">Edit Post</button>
-        <button type="button"
-                class="btn btn-outline-danger"
-                data-bs-toggle="modal"
-                data-bs-target="#deleteModal">Delete Post</button>
+        <div id="postActions" class="post-actions mt-4 pt-3 border-top d-none">
+          <button type="button"
+                  class="btn btn-outline-secondary me-1"
+                  data-bs-toggle="modal"
+                  data-bs-target="#editModal">Edit Post</button>
+          <button type="button"
+                  class="btn btn-outline-danger"
+                  data-bs-toggle="modal"
+                  data-bs-target="#deleteModal">Delete Post</button>
         </div>
 
       </div>

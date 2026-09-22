@@ -100,11 +100,42 @@ async def home(request: Request, db: Annotated[AsyncSession, Depends(get_db)]):
         {
             "posts": posts,
             "title": "Home",
+            "header": "Latest Posts",
+            "subheader": "Fresh from the community.",
             "limit": settings.posts_per_page,
             "has_more": has_more,
         },
     )
 
+
+@app.get("/top-posts", include_in_schema=False, name="top-posts")
+async def top_posts(request: Request, db: Annotated[AsyncSession, Depends(get_db)]):
+    count_result = await db.execute(select(func.count()).select_from(models.Post))
+    total = count_result.scalar() or 0
+
+    result = await db.execute(
+        select(models.Post)
+        .options(selectinload(models.Post.author))
+        .order_by(models.Post.score.desc())
+        .limit(settings.posts_per_page),
+    )
+    posts = result.scalars().all()
+
+    has_more = len(posts) < total
+
+
+    return templates.TemplateResponse(
+        request,
+        "home.html",
+        {
+            "posts": posts,
+            "title": "Top Posts",
+            "header": "Top Posts",
+            "subheader": "The highest rated posts from the community",
+            "limit": settings.posts_per_page,
+            "has_more": has_more,
+        },
+    )
 
 @app.get("/posts/{post_id}", include_in_schema=False)
 async def post_page(request: Request, post_id: int, db: Annotated[AsyncSession, Depends(get_db)]):

@@ -1,5 +1,9 @@
 {% extends "layout.html" %}
 {% block content %}
+    <div class="mb-4">
+        <h1 class="page-heading">{{ header }}</h1>
+        <p class="page-subheading">{{ subheader }}</p>
+    </div>
     <div id="postsContainer">
         {% for post in posts %}
             <article class="content-section py-3 px-4 mb-4">
@@ -33,8 +37,8 @@
         {% endfor %}
     </div>
     {% if has_more %}
-        <div class="text-center mb-4">
-            <button type="button" class="btn btn-outline-primary" id="loadMoreBtn">Load More Posts</button>
+        <div class="text-center mb-4 pt-2">
+            <button type="button" class="btn btn-outline-primary px-4" id="loadMoreBtn">Load More Posts</button>
         </div>
     {% endif %}
 {% endblock content %}

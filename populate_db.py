@@ -17,10 +17,10 @@ POPULATE_IMAGES_DIR = Path("populate_images")
 
 USERS = [
     {
-        "username": "CoreyMSchafer",
-        "email": "CoreyMSchafer@gmail.com",
-        "password": "TestPassword1!",
-        "image": "corey.png",
+        "username": "MizanurAsif",
+        "email": "mizanurasif@gmail.com",
+        "password": "testtest",
+        "image": "profile-pic-1.jpg",
     },
     {
         "username": "DefaultDude",
@@ -29,28 +29,28 @@ USERS = [
         # No image - uses default
     },
     {
-        "username": "WillowTheCat",
+        "username": "Tahmina",
         "email": "TestEmail3@test.com",
         "password": "TestPassword3!",
-        "image": "willow.png",
+        "image": "profile-pic-2.jpg",
     },
     {
-        "username": "FarmDogs",
+        "username": "Sultana",
         "email": "TestEmail4@test.com",
         "password": "TestPassword4!",
-        "image": "farmdogs.png",
+        "image": "profile-pic-3.jpg",
     },
     {
-        "username": "PoppyTheCoder",
+        "username": "Niloy",
         "email": "TestEmail5@test.com",
         "password": "TestPassword5!",
-        "image": "poppy.png",
+        "image": "profile-pic-4.jpg",
     },
     {
-        "username": "GoodBoyBronx",
+        "username": "Shihan",
         "email": "TestEmail6@test.com",
         "password": "TestPassword6!",
-        "image": "bronx.png",
+        "image": "profile-pic-5.jpg",
     },
 ]
 
