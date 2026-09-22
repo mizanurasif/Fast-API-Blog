@@ -31,7 +31,6 @@ The backend is a clean JSON API (`/api/...`, fully documented at `/docs`), and t
 - [Running the tests](#running-the-tests)
 - [Docker](#docker)
 - [API reference](#api-reference)
-- [Roadmap](#roadmap)
 - [License](#license)
 
 ---
