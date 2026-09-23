@@ -485,17 +485,30 @@ The suite needs the `test_blog` database from [step 2](#2-create-the-database) t
 
 ## Docker
 
+The build is two-stage: `uv` resolves the locked dependencies into a virtual environment in the builder, then only the finished `/app` tree is copied into a clean `python:3.14.7-slim-trixie` runtime that runs as a non-root user.
+
 ```bash
 docker build -t fastapi-blog .
-docker run -p 8000:8000 --env-file .env fastapi-blog
 ```
 
-Point `DATABASE_URL` at a reachable host — from inside a container, `localhost` is the container itself, so use `host.docker.internal` (Docker Desktop) or a Compose service name.
+```bash
+docker run -p 8000:8000 \
+  --env-file .env \
+  -e DATABASE_URL="postgresql+psycopg://bloguser:blogpass@host.docker.internal/blog" \
+  fastapi-blog:latest
+```
 
-> **Two things to fix before this builds from a fresh clone:**
->
-> 1. `uv.lock` is listed in `.gitignore`, but the Dockerfile's `uv sync --locked` requires it. Remove that line and commit the lockfile — it is what makes installs reproducible.
-> 2. The Dockerfile uses `python:3.12-slim` while `pyproject.toml` declares `requires-python = ">=3.13"`. Bump the base image to `python:3.13-slim`.
+Then open **http://localhost:8000/**.
+
+The startup log reads `Uvicorn running on http://0.0.0.0:8000`, but that is the *bind* address — it means "listening on every interface inside the container", not an address you can browse to. `-p 8000:8000` is what publishes it onto your host's loopback, so `localhost` (or `127.0.0.1`) is the address that actually reaches the app. Binding `0.0.0.0` inside the container is deliberate: bound to `127.0.0.1` the server would only accept connections originating inside the container, and `-p` would have nothing to forward to.
+
+Point `DATABASE_URL` at a reachable host — from inside a container, `localhost` is the container itself, so use `host.docker.internal` (Docker Desktop) or a Compose service name. An explicit `-e` overrides the same key from `--env-file`, which is why the command above can still load `.env` for everything else.
+
+`PORT` is read at startup and defaults to `8000`, so `-e PORT=9000 -p 9000:9000` changes the port without a rebuild.
+
+> **One thing to fix before this builds from a fresh clone:** `uv.lock` is listed in `.gitignore` and is not committed, but the Dockerfile's `uv sync --locked` bind-mounts it. Remove that line from `.gitignore` and commit the lockfile — it is what makes the install reproducible.
+
+> **Migrations do not run in the container.** `.dockerignore` excludes `alembic/` and `alembic.ini`, so the image ships the app only. Run `uv run alembic upgrade head` against the database from outside the container, as in [Database migrations](#database-migrations). To migrate on container start instead, drop those two entries from `.dockerignore` and invoke Alembic from an entrypoint.
 
 ---
 
